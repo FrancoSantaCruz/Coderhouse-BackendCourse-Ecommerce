@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyecto Final | CoderHouse</title>
+</head>
+
+<body>
+    <header>
+        <nav style="background-color: cadetblue;">
+            <p>▶️Menu</p>
+                {{user}}
+                {{!-- <h1>Welcome {{user.first_name}}</h1> --}}
+            <ul>
+                <li><a href="/">Home</a></li>
+                {{#if user}}
+                    <li><h1>Welcome {{user.first_name}}</h1></li>
+                    <li><a href="/api/sessions/logout">LOGOUT</a></li>
+                {{else}}
+                    <li><a href="/signup">Signup</a></li>
+                    <li><a href="/login">Login</a></li>
+                {{/if}}
+            </ul>
+        </nav>
+    </header>
+    {{{body}}}
+</body>
+
+</html>

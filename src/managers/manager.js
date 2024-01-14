@@ -5,11 +5,11 @@ export default class Manager {
     }
 
     async findAll() {
-        return this.model.find().populate(this.populate);
+        return this.model.find().populate(this.populate).lean();
     }
 
     async findById(id) {
-        return this.model.findById(id).populate(this.populate);
+        return this.model.findById(id).populate(this.populate).lean();
     }
 
     async createOne(obj) {

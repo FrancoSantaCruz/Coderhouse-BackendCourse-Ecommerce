@@ -15,13 +15,21 @@ import cookieParser from "cookie-parser";
 import MongoStore from "connect-mongo";
 import session from "express-session";
 import passport from "passport";
+import { Server } from 'socket.io' // WebSocket
 
 
 import "./passport.js";
 import config from "./config.js";
 
+
+import { usersManager } from "./managers/users.manager.js";
+import { messagesManager } from "./managers/messages.manager.js";
+
+
+
 const app = express();
 
+app.use(express.static(__dirname+ '/public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -31,7 +39,7 @@ app.use(
             mongoUrl: config.mongo_uri,
         }),
         secret: config.session_secret,
-        cookie: { maxAge: 2 * 60000 },
+        cookie: { maxAge: 5 * 60000 },
     })
 );
 
@@ -51,6 +59,47 @@ app.use("/api/users", usersRouter);
 app.use("/api/carts", cartsRouter);
 app.use("/api/sessions", sessionsRouter);
 
-app.listen(8080, () => {
-    console.log("Server is running on port 8080");
+const httpServer = app.listen(8080, () => {
+    console.log("Server is running on port 8080.\nhttp://localhost:8080/");
 });
+
+const socketServer = new Server(httpServer);
+
+// ----------------------------- WebSocket ------------------------------------
+socketServer.on('connection', (socket) => {
+    let userFound
+    socket.on('userJoin', async(user) => {
+        userFound = await usersManager.findByEmail(user.email)
+        socket.emit('newUserBroadcast', userFound)
+    })
+    socket.on('message', async(msg) => {
+        let chat = {
+            chats: [
+                {
+                    autor: userFound._id,
+                    content: msg.message,
+                    date: new Date()
+                }
+            ]
+        }
+        let chatFound = await messagesManager.findById(msg.cid)
+        chatFound.chats = [...chatFound.chats, ...chat.chats]
+        await messagesManager.updateOne(msg.cid, chatFound)
+
+        let messages = await messagesManager.findByField({'_id': msg.cid})
+        socketServer.emit('chat', messages.chats)
+    })
+})
+
+/*
+    Products: 
+        - All products view.
+        - Product Detail view.
+        - Create a Product view.
+        - Delete a Product view.
+        
+    Cart: 
+    - All products cart view.
+    - Add to cart buttons in every product
+    // - Buttons delete or add more of the same product. 
+*/

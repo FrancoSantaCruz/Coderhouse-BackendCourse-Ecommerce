@@ -95,11 +95,12 @@ socketServer.on('connection', (socket) => {
     Products: 
         - All products view.
         - Product Detail view.
-        - Create a Product view.
-        - Delete a Product view.
+        - Create a Product view (modal)
+        - Delete a Product button
+        - Add product to cart button
         
     Cart: 
     - All products cart view.
     - Add to cart buttons in every product
-    // - Buttons delete or add more of the same product. 
+    // - Buttons delete or add more of the same product.
 */

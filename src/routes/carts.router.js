@@ -26,6 +26,7 @@ router.post('/', async (req, res) => {
 
 router.post('/:cid/products/:pid', async (req, res) => {
     const { cid, pid } = req.params;
+    let user = req.user
     try {
         const cart = await cartsManager.findById(cid)
         if (!cart) {
@@ -35,19 +36,18 @@ router.post('/:cid/products/:pid', async (req, res) => {
         if (!product) {
             return res.status(400).json({ message: 'Product not found' });
         }
-
-        const prod_idx = cart.products.findIndex( (prod) => prod.product.equals(pid) );
+        const prod_idx = cart.products.findIndex((prod) => prod.product._id.equals(pid));
         // Como prod.product son tipo de datos ObjectId de mongoose
         // necesitamos usar .equals() para comparar con otro tipo de dato
-
-        if(prod_idx === -1){
-            cart.products.push({product: pid, quantity: 1})
+        if (prod_idx === -1) {
+            cart.products.push({ product: pid, quantity: 1 })
         } else {
             cart.products[prod_idx].quantity++
         }
-        
-        await cart.save()
-        res.status(200).json({ message: 'Product added' })
+
+        await cartsManager.updateOne(cid, cart)
+
+        res.status(200).redirect('back')
     } catch (error) {
         res.status(500).json({ error })
     }

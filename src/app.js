@@ -29,7 +29,7 @@ import { messagesManager } from "./managers/messages.manager.js";
 
 const app = express();
 
-app.use(express.static(__dirname+ '/public'));
+app.use(express.static(__dirname + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -48,9 +48,19 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // handlebars
-app.engine("handlebars", handlebars.engine());
+app.engine("handlebars", handlebars.engine({
+    // handlebars helpers
+    helpers: {
+        ifEquals: function(arg1, arg2) {
+            return (arg1 == arg2) ? true : false
+        }
+    }
+}));
 app.set("views", __dirname + "/views");
 app.set("view engine", "handlebars");
+
+
+
 
 // routes
 app.use("/", viewsRouter);
@@ -68,11 +78,11 @@ const socketServer = new Server(httpServer);
 // ----------------------------- WebSocket ------------------------------------
 socketServer.on('connection', (socket) => {
     let userFound
-    socket.on('userJoin', async(user) => {
+    socket.on('userJoin', async (user) => {
         userFound = await usersManager.findByEmail(user.email)
         socket.emit('newUserBroadcast', userFound)
     })
-    socket.on('message', async(msg) => {
+    socket.on('message', async (msg) => {
         let chat = {
             chats: [
                 {
@@ -86,7 +96,7 @@ socketServer.on('connection', (socket) => {
         chatFound.chats = [...chatFound.chats, ...chat.chats]
         await messagesManager.updateOne(msg.cid, chatFound)
 
-        let messages = await messagesManager.findByField({'_id': msg.cid})
+        let messages = await messagesManager.findByField({ '_id': msg.cid })
         socketServer.emit('chat', messages.chats)
     })
 })

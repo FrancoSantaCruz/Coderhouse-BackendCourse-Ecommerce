@@ -3,13 +3,20 @@ import { usersManager } from "../managers/users.manager.js";
 import { messagesManager } from "../managers/messages.manager.js";
 import { productsManager } from "../managers/products.manager.js";
 
+import { authValidation } from "../middlewares/auth.middleware.js";
+import { roleValidation } from "../middlewares/role.middleware.js";
+
 const router = Router();
 
 router.get('/', async (req, res) => {
     const user = req.user
     try {
         if (user) {
-            return res.render('home', { user: user })
+            let cart_total = 0
+            user.cart.products.forEach(e => {
+                cart_total += e.product.price
+            })
+            return res.render('home', { user: user, cart_total: cart_total })
         } else {
             return res.render('home')
         }
@@ -28,7 +35,7 @@ router.get('/signup', async (req, res) => {
 
 
 // CHATS VIEWS
-router.get("/chats", async (req, res) => {
+router.get("/chats", authValidation, async (req, res) => {
     const user = req.user
     const chats = await messagesManager.findAll()
 
@@ -53,7 +60,7 @@ router.post("/chats/new", async (req, res) => {
     }
 });
 
-router.get("/chat/:cid", async (req, res) => {
+router.get("/chat/:cid", authValidation, async (req, res) => {
     const { cid } = req.params
     const chat = await messagesManager.findByField({ '_id': cid })
     res.render("chat", { chat: chat._id, messages: chat.chats, user: req.user });
@@ -62,9 +69,22 @@ router.get("/chat/:cid", async (req, res) => {
 // PRODUCTS VIEW
 // All products
 router.get('/products', async (req, res) => {
+    const user = req.user
     try {
         const products = await productsManager.findAllPg(req.query)
-        res.render('products_all', { products: products.payload, info: products })
+        products.payload.forEach(e => {
+            if (e.sale) {
+                e["sale_price"] = e.price - (Math.round(e.price * (e.sale_percent / 100)))
+            }
+        });
+        if (user) {
+            let cart_total = 0
+            user.cart.products.forEach(e => {
+                cart_total += e.product.price
+            })
+            return res.render('products_all', { products: products.payload, info: products, user: user, cart_total: cart_total })
+        }
+        res.render('products_all', { products: products.payload, info: products, user: user })
     } catch (error) {
         res.redirect(500, '/error')
     }
@@ -72,9 +92,17 @@ router.get('/products', async (req, res) => {
 
 // Product detail
 router.get('/products/:pid', async (req, res) => {
-    const { pid } = req.query;
+    const { pid } = req.params;
+    const user = req.user;
     try {
-        const product = await productsManager.findByField({'_id': pid})
+        const product = await productsManager.findById(pid)
+        if(user){
+            let cart_total = 0
+            user.cart.products.forEach(e => {
+                cart_total += e.product.price
+            })
+            return res.render('products_detail', { product, user, cart_total})
+        }
         res.render('products_detail', { product })
     } catch (error) {
         res.redirect(500, '/error')

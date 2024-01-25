@@ -32,8 +32,8 @@ class ProductsManager extends Manager {
             page: products.page,
             hasPrevPage: products.hasPrevPage,
             hasNextPage: products.hasNextPage,
-            prevLink: products.hasPrevPage ? `http://localhost:8080/api/products?page=${products.prevPage}` : null,
-            nextLink: products.hasNextPage ? `http://localhost:8080/api/products?page=${products.nextPage}` : null
+            prevLink: products.hasPrevPage ? `http://localhost:8080/products?page=${products.prevPage}` : null,
+            nextLink: products.hasNextPage ? `http://localhost:8080/products?page=${products.nextPage}` : null
         }
         let aux = JSON.stringify(info)
         aux = JSON.parse(aux)

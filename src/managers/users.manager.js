@@ -3,7 +3,7 @@ import Manager from "./manager.js";
 
 class UsersManager extends Manager {
   constructor() {
-    super(usersModel, "cart");
+    super(usersModel, { path: "cart", populate: { path: "products.product" } });
   }
 
   async findByEmail(email) {
